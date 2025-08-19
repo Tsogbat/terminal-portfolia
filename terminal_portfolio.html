@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terminal Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
+
+      :root {
+        --bg-dark: #1a1a1a;
+        --text-dark: #f0f0f0;
+        --primary-dark: #00ff9d;
+        --secondary-dark: #666;
+        --bg-light: #f0f0f0;
+        --text-light: #1a1a1a;
+        --primary-light: #007acc;
+        --secondary-light: #999;
+      }
+
+      body {
+        font-family: "JetBrains Mono", monospace;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .cursor {
+        display: inline-block;
+        width: 10px;
+        height: 20px;
+        background-color: var(--primary);
+        animation: blink 1s step-end infinite;
+        vertical-align: middle;
+      }
+
+      @keyframes blink {
+        from,
+        to {
+          background-color: transparent;
+        }
+        50% {
+          background-color: var(--primary);
+        }
+      }
+
+      .typing {
+        border-right: 2px solid var(--primary);
+        white-space: nowrap;
+        overflow: hidden;
+        animation: typing 3.5s steps(40, end),
+          blink-caret 0.75s step-end infinite;
+      }
+
+      @keyframes typing {
+        from {
+          width: 0;
+        }
+        to {
+          width: 100%;
+        }
+      }
+
+      @keyframes blink-caret {
+        from,
+        to {
+          border-color: transparent;
+        }
+        50% {
+          border-color: var(--primary);
+        }
+      }
+
+      .command-line {
+        display: flex;
+        align-items: center;
+      }
+
+      .prompt {
+        color: var(--primary);
+        margin-right: 8px;
+        white-space: nowrap;
+      }
+
+      .input-line {
+        flex-grow: 1;
+        outline: none;
+        background: transparent;
+        border: none;
+        color: var(--text);
+        font-family: "JetBrains Mono", monospace;
+        caret-color: transparent;
+        padding: 0;
+        margin: 0;
+      }
+
+      .root-prompt {
+        color: #ff5555;
+      }
+
+      .output {
+        margin-bottom: 16px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .link {
+        color: var(--primary);
+        text-decoration: underline;
+        cursor: pointer;
+      }
+
+      .link:hover {
+        opacity: 0.8;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      /* Dark mode by default */
+      body.dark {
+        --bg: var(--bg-dark);
+        --text: var(--text-dark);
+        --primary: var(--primary-dark);
+        --secondary: var(--secondary-dark);
+        background-color: var(--bg);
+        color: var(--text);
+      }
+
+      body.light {
+        --bg: var(--bg-light);
+        --text: var(--text-light);
+        --primary: var(--primary-light);
+        --secondary: var(--secondary-light);
+        background-color: var(--bg);
+        color: var(--text);
+      }
+    </style>
+  </head>
+  <body class="dark min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold" style="color: var(--primary)">
+          terminal-portfolio
+        </h1>
+        <button
+          id="theme-toggle"
+          class="px-3 py-1 rounded text-sm"
+          style="background-color: var(--secondary); color: var(--text)"
+        >
+          Toggle Theme
+        </button>
+      </div>
+
+      <div
+        id="terminal"
+        class="p-4 rounded-lg"
+        style="
+          background-color: var(--bg);
+          border: 1px solid var(--secondary);
+          min-height: 70vh;
+        "
+      >
+        <div class="output">
+          Welcome to my terminal portfolio! Type
+          <span class="link" onclick="insertCommand('help')">help</span> to get
+          started.
+        </div>
+        <div id="history"></div>
+        <div class="command-line">
+          <span id="prompt" class="prompt">guest@portfolio:~$</span>
+          <div style="display: flex; align-items: center; flex-grow: 1">
+            <input
+              id="command-input"
+              class="input-line"
+              autofocus
+              style="flex-grow: 1"
+            />
+            <span id="cursor" class="cursor" style="margin-left: -10px"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Theme toggle
+        const themeToggle = document.getElementById("theme-toggle");
+        themeToggle.addEventListener("click", toggleTheme);
+
+        // Check for saved theme preference
+        if (localStorage.getItem("theme") === "light") {
+          document.body.classList.remove("dark");
+          document.body.classList.add("light");
+        }
+
+        // Terminal functionality
+        const commandInput = document.getElementById("command-input");
+        const historyDiv = document.getElementById("history");
+        const promptSpan = document.getElementById("prompt");
+
+        let isRoot = false;
+        let currentDir = "~";
+
+        // Focus the input field and keep it focused
+        commandInput.focus();
+        document.addEventListener("click", function () {
+          commandInput.focus();
+        });
+
+        // Handle command input
+        commandInput.addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            const command = commandInput.value.trim();
+            if (command) {
+              commandInput.value = "";
+
+              // Add the command to history
+              addToHistory(command);
+
+              // Process the command
+              processCommand(command);
+            }
+          }
+        });
+
+        function addToHistory(command) {
+          const commandLine = document.createElement("div");
+          commandLine.className = "command-line mb-2";
+
+          const promptClone = promptSpan.cloneNode(true);
+          const inputClone = document.createElement("span");
+          inputClone.textContent = command;
+          inputClone.style.color = "var(--text)";
+
+          commandLine.appendChild(promptClone);
+          commandLine.appendChild(inputClone);
+          historyDiv.appendChild(commandLine);
+
+          // Scroll to bottom
+          historyDiv.scrollIntoView(false);
+        }
+
+        function addOutput(text, typing = false) {
+          const outputDiv = document.createElement("div");
+          outputDiv.className = "output";
+          outputDiv.textContent = text;
+          historyDiv.appendChild(outputDiv);
+
+          // Scroll to bottom
+          historyDiv.scrollIntoView(false);
+        }
+
+        function processCommand(command) {
+          const parts = command.split(" ");
+          const cmd = parts[0].toLowerCase();
+          const arg = parts.length > 1 ? parts.slice(1).join(" ") : null;
+
+          if (!cmd) {
+            addOutput("");
+            return;
+          }
+
+          switch (cmd) {
+            case "help":
+              showHelp();
+              break;
+            case "ls":
+              listDirectory();
+              break;
+            case "cd":
+              changeDirectory(arg);
+              break;
+            case "cat":
+              showFile(arg);
+              break;
+            case "clear":
+              clearTerminal();
+              break;
+            case "sudo":
+              if (arg === "su") {
+                gainRootAccess();
+              } else {
+                addOutput(`sudo: ${arg}: command not found`);
+              }
+              break;
+            case "nano":
+              if (isRoot) {
+                simulateNano(arg);
+              } else {
+                addOutput(`nano: command not found`);
+              }
+              break;
+            case "rm":
+              if (isRoot) {
+                simulateRm(arg);
+              } else {
+                addOutput(`rm: command not found`);
+              }
+              break;
+            case "touch":
+              if (isRoot) {
+                simulateTouch(arg);
+              } else {
+                addOutput(`touch: command not found`);
+              }
+              break;
+            case "whoami":
+              addOutput(isRoot ? "root" : "guest");
+              break;
+            case "pwd":
+              addOutput(currentDir);
+              break;
+            default:
+              addOutput(`${cmd}: command not found`);
+          }
+        }
+
+        function showHelp() {
+          const helpText = `Available commands:
+  help                - Show this help message
+  ls                  - List available sections
+  cd [section]        - Navigate into a section
+  cat [file]          - View details of a file
+  clear               - Clear the terminal
+  whoami              - Show current user
+  pwd                 - Print working directory
+  
+${
+  isRoot
+    ? "Root commands:\n  nano [file]         - Edit a file\n  rm [file]           - Remove a file\n  touch [file]        - Create a new file"
+    : ""
+}`;
+          addOutput(helpText, false);
+        }
+
+        function listDirectory() {
+          let output = "";
+
+          if (currentDir === "~") {
+            output = `about/\nskills/\nprojects/\neducation/\nexperience/\ncontact/`;
+          } else if (currentDir === "~/projects") {
+            output = `project1.txt    - Cybersecurity research\nproject2.txt    - ML model deployment\nproject3.txt    - Data analysis`;
+          } else if (currentDir === "~/education") {
+            output = `university.txt  - Computer Science Degree\ncertificates.txt - Professional Certifications`;
+          } else if (currentDir === "~/experience") {
+            output = `job1.txt        - Security Analyst\njob2.txt        - Data Scientist`;
+          } else if (currentDir === "~/about") {
+            output = `about.txt       - Personal information`;
+          } else if (currentDir === "~/skills") {
+            output = `skills.txt      - Technical skills list`;
+          } else if (currentDir === "~/contact") {
+            output = `contact.txt     - Contact information`;
+          }
+
+          addOutput(
+            output ||
+              `ls: cannot access '${currentDir}': No such file or directory`
+          );
+        }
+
+        function changeDirectory(arg) {
+          if (!arg) {
+            currentDir = "~";
+            addOutput("");
+          } else if (arg === "..") {
+            if (currentDir !== "~") {
+              currentDir = "~";
+            }
+            addOutput("");
+          } else if (
+            currentDir === "~" &&
+            [
+              "about",
+              "skills",
+              "projects",
+              "education",
+              "experience",
+              "contact",
+            ].includes(arg)
+          ) {
+            currentDir = `~/${arg}`;
+            addOutput("");
+          } else {
+            addOutput(`cd: no such file or directory: ${arg}`);
+          }
+        }
+
+        function showFile(arg) {
+          if (!arg) {
+            addOutput("cat: missing file operand");
+            return;
+          }
+
+          let content = "";
+
+          if (currentDir === "~") {
+            if (arg === "about.txt") {
+              content = `About Me:
+I'm a cybersecurity and data science professional with expertise in machine learning and data analysis. 
+Passionate about building secure systems and extracting insights from complex datasets.`;
+            } else if (arg === "skills.txt") {
+              content = `Technical Skills:
+- Cybersecurity: Penetration testing, Security analysis, Network security
+- Data Analysis: Python, R, SQL, Data visualization
+- Machine Learning: TensorFlow, PyTorch, NLP, Computer vision`;
+            } else if (arg === "contact.txt") {
+              content = `Contact Information:
+Email: contact@example.com
+GitHub: github.com/username
+LinkedIn: linkedin.com/in/username
+Twitter: @username`;
+            } else {
+              content = `cat: ${arg}: No such file in current directory`;
+            }
+          } else if (currentDir === "~/projects") {
+            if (arg === "project1.txt") {
+              content = `Cybersecurity Research Project:
+- Developed novel intrusion detection system
+- Achieved 99.8% detection rate
+- Published in IEEE Security & Privacy`;
+            } else if (arg === "project2.txt") {
+              content = `ML Model Deployment:
+- Built predictive model for customer churn
+- Deployed as microservice with 99.9% uptime
+- Reduced churn by 15% for client`;
+            } else if (arg === "project3.txt") {
+              content = `Data Analysis Project:
+- Analyzed 1TB of sensor data
+- Identified key performance indicators
+- Created interactive dashboard for stakeholders`;
+            } else {
+              content = `cat: ${arg}: No such file in current directory`;
+            }
+          } else if (currentDir === "~/education") {
+            if (arg === "university.txt") {
+              content = `Computer Science Degree:
+- University of Technology, 2018-2022
+- Specialized in Cybersecurity and AI
+- GPA: 3.9/4.0`;
+            } else if (arg === "certificates.txt") {
+              content = `Professional Certifications:
+- Certified Ethical Hacker (CEH)
+- AWS Certified Solutions Architect
+- Google Data Analytics Professional`;
+            } else {
+              content = `cat: ${arg}: No such file in current directory`;
+            }
+          } else if (currentDir === "~/experience") {
+            if (arg === "job1.txt") {
+              content = `Security Analyst - TechSecure Inc. (2020-2021):
+- Conducted vulnerability assessments
+- Implemented security controls
+- Reduced security incidents by 40%`;
+            } else if (arg === "job2.txt") {
+              content = `Data Scientist - DataInsights Corp. (2021-Present):
+- Developed ML models for business insights
+- Automated data pipelines
+- Improved decision-making processes`;
+            } else {
+              content = `cat: ${arg}: No such file in current directory`;
+            }
+          } else {
+            content = `cat: ${arg}: No such file in current directory`;
+          }
+
+          addOutput(content);
+        }
+
+        function clearTerminal() {
+          historyDiv.innerHTML = "";
+        }
+
+        function gainRootAccess() {
+          if (!isRoot) {
+            addOutput("Password: ", false);
+
+            // Simulate password input
+            setTimeout(() => {
+              addOutput(
+                "\nAuthentication successful. You now have root access.",
+                false
+              );
+              isRoot = true;
+              promptSpan.textContent = "root@portfolio:~#";
+              promptSpan.classList.add("root-prompt");
+            }, 1000);
+          } else {
+            addOutput("You are already root!");
+          }
+        }
+
+        function simulateNano(arg) {
+          if (!arg) {
+            addOutput("nano: missing file operand");
+            return;
+          }
+
+          addOutput(
+            `Opening ${arg} in nano editor...\n\n[ You're in the nano editor. Press Ctrl+X to exit ]`,
+            false
+          );
+
+          // Simulate nano interface
+          setTimeout(() => {
+            addOutput(
+              "\n\n(Editing session ended - changes not actually saved)",
+              false
+            );
+          }, 2000);
+        }
+
+        function simulateRm(arg) {
+          if (!arg) {
+            addOutput("rm: missing file operand");
+            return;
+          }
+
+          addOutput(`rm: remove regular file '${arg}'? `, false);
+
+          // Simulate confirmation
+          setTimeout(() => {
+            addOutput(`\nFile '${arg}' removed.`, false);
+          }, 1000);
+        }
+
+        function simulateTouch(arg) {
+          if (!arg) {
+            addOutput("touch: missing file operand");
+            return;
+          }
+
+          addOutput(`Created new file '${arg}'`, false);
+        }
+
+        function toggleTheme() {
+          if (document.body.classList.contains("dark")) {
+            document.body.classList.remove("dark");
+            document.body.classList.add("light");
+            localStorage.setItem("theme", "light");
+          } else {
+            document.body.classList.remove("light");
+            document.body.classList.add("dark");
+            localStorage.setItem("theme", "dark");
+          }
+        }
+
+        // Helper function to insert command when clicking on help links
+        window.insertCommand = function (cmd) {
+          commandInput.value = cmd;
+          commandInput.focus();
+        };
+
+        // Custom cursor effect
+        setInterval(() => {
+          const cursor = document.getElementById("cursor");
+          cursor.style.visibility =
+            cursor.style.visibility === "hidden" ? "visible" : "hidden";
+        }, 500);
+      });
+    </script>
+  </body>
+</html>
