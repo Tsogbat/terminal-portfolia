@@ -96,6 +96,42 @@
         margin: 0;
       }
 
+      .input-container {
+        position: relative;
+        display: flex;
+        align-items: center;
+        flex-grow: 1;
+      }
+
+      .block-caret {
+        position: absolute;
+        top: 0;
+        width: 1ch;
+        height: 1.2em;
+        background-color: var(--primary);
+        pointer-events: none;
+        animation: caret-blink 1s steps(1, end) infinite;
+      }
+
+      @keyframes caret-blink {
+        0%,
+        50% {
+          opacity: 1;
+        }
+        50.01%,
+        100% {
+          opacity: 0;
+        }
+      }
+
+      .input-measure {
+        position: absolute;
+        visibility: hidden;
+        white-space: pre;
+        font: inherit;
+        letter-spacing: inherit;
+      }
+
       .root-prompt {
         color: #ff5555;
       }
@@ -104,6 +140,10 @@
         margin-bottom: 16px;
         white-space: pre-wrap;
         word-break: break-word;
+      }
+
+      .output.welcome {
+        white-space: normal;
       }
 
       .link {
@@ -164,7 +204,7 @@
           min-height: 70vh;
         "
       >
-        <div class="output">
+        <div class="output welcome">
           Welcome to my terminal portfolio! Type
           <span class="link" onclick="insertCommand('help')">help</span> to get
           started.
@@ -172,14 +212,20 @@
         <div id="history"></div>
         <div class="command-line">
           <span id="prompt" class="prompt">guest@portfolio:~$</span>
-          <div style="display: flex; align-items: center; flex-grow: 1">
+          <div class="input-container">
             <input
               id="command-input"
               class="input-line"
               autofocus
+              autocomplete="off"
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck="false"
+              name="command-input"
               style="flex-grow: 1"
             />
-            <span id="cursor" class="cursor" style="margin-left: -10px"></span>
+            <div id="block-caret" class="block-caret"></div>
+            <div id="input-measure" class="input-measure"></div>
           </div>
         </div>
       </div>
@@ -204,6 +250,9 @@
 
         let isRoot = false;
         let currentDir = "~";
+        const storedHistory = localStorage.getItem("commandHistory");
+        const commandHistory = storedHistory ? JSON.parse(storedHistory) : [];
+        let historyIndex = -1; // -1 means current input, 0..n are history indices
 
         // Focus the input field and keep it focused
         commandInput.focus();
@@ -211,7 +260,7 @@
           commandInput.focus();
         });
 
-        // Handle command input
+        // Handle command input (Enter)
         commandInput.addEventListener("keypress", function (e) {
           if (e.key === "Enter") {
             const command = commandInput.value.trim();
@@ -221,11 +270,191 @@
               // Add the command to history
               addToHistory(command);
 
+              // Store in persistent history
+              commandHistory.push(command);
+              localStorage.setItem(
+                "commandHistory",
+                JSON.stringify(commandHistory)
+              );
+              historyIndex = -1;
+
               // Process the command
               processCommand(command);
             }
           }
         });
+
+        // Handle history navigation and autocomplete
+        commandInput.addEventListener("keydown", function (e) {
+          if (e.key === "ArrowUp") {
+            e.preventDefault();
+            navigateHistory(-1);
+          } else if (e.key === "ArrowDown") {
+            e.preventDefault();
+            navigateHistory(1);
+          } else if (e.key === "Tab") {
+            e.preventDefault();
+            handleAutocomplete();
+          }
+        });
+
+        function navigateHistory(direction) {
+          if (!commandHistory.length) return;
+          if (historyIndex === -1) {
+            historyIndex = commandHistory.length; // virtual position after last item
+          }
+
+          historyIndex += direction;
+
+          if (historyIndex < 0) historyIndex = 0;
+          if (historyIndex > commandHistory.length)
+            historyIndex = commandHistory.length;
+
+          if (historyIndex === commandHistory.length) {
+            commandInput.value = "";
+          } else {
+            commandInput.value = commandHistory[historyIndex];
+          }
+          updateBlockCaretPosition();
+        }
+
+        function handleAutocomplete() {
+          const full = commandInput.value;
+          const caretIndex = commandInput.selectionStart || 0;
+          const afterCaret = full.slice(caretIndex);
+          if (afterCaret.trim() !== "") return; // only autocomplete at end
+
+          const beforeCaret = full.slice(0, caretIndex);
+          const parts = beforeCaret.split(/\s+/);
+          const hasTrailingSpace = /\s$/.test(beforeCaret);
+
+          const commands = [
+            "help",
+            "ls",
+            "cd",
+            "cat",
+            "clear",
+            "whoami",
+            "pwd",
+            "sudo",
+            "nano",
+            "rm",
+            "touch",
+          ];
+
+          function listDirsForCd() {
+            if (currentDir === "~") {
+              return [
+                "about",
+                "skills",
+                "projects",
+                "education",
+                "experience",
+                "contact",
+              ];
+            }
+            return [".."]; // allow going up elsewhere
+          }
+
+          function listFilesForCurrentDir() {
+            if (currentDir === "~") {
+              return ["about.txt", "skills.txt", "contact.txt"];
+            }
+            if (currentDir === "~/projects") {
+              return ["project1.txt", "project2.txt", "project3.txt"];
+            }
+            if (currentDir === "~/education") {
+              return ["university.txt", "certificates.txt"];
+            }
+            if (currentDir === "~/experience") {
+              return ["job1.txt", "job2.txt"];
+            }
+            if (currentDir === "~/about") {
+              return ["about.txt"];
+            }
+            if (currentDir === "~/skills") {
+              return ["skills.txt"];
+            }
+            if (currentDir === "~/contact") {
+              return ["contact.txt"];
+            }
+            return [];
+          }
+
+          function filterMatches(candidates, prefix) {
+            const p = prefix.toLowerCase();
+            return candidates.filter((c) => c.toLowerCase().startsWith(p));
+          }
+
+          function commonPrefix(strings) {
+            if (!strings.length) return "";
+            let prefix = strings[0];
+            for (let i = 1; i < strings.length; i++) {
+              while (!strings[i].startsWith(prefix)) {
+                prefix = prefix.slice(0, -1);
+                if (!prefix) return "";
+              }
+            }
+            return prefix;
+          }
+
+          let suggestions = [];
+          let prefix = "";
+          let addTrailingSpace = false;
+
+          if (parts.length === 1 && !hasTrailingSpace) {
+            // Completing the command name
+            prefix = parts[0];
+            suggestions = filterMatches(commands, prefix);
+            addTrailingSpace = true;
+          } else {
+            const first = parts[0];
+            const argPrefix = hasTrailingSpace ? "" : parts[parts.length - 1];
+            if (first === "cd") {
+              suggestions = filterMatches(listDirsForCd(), argPrefix);
+              addTrailingSpace = true;
+            } else if (first === "cat") {
+              suggestions = filterMatches(listFilesForCurrentDir(), argPrefix);
+            } else if (first === "sudo") {
+              suggestions = filterMatches(["su"], argPrefix);
+              addTrailingSpace = true;
+            } else if (["nano", "rm", "touch"].includes(first)) {
+              suggestions = filterMatches(listFilesForCurrentDir(), argPrefix);
+            } else if (
+              ["ls", "clear", "whoami", "pwd", "help"].includes(first)
+            ) {
+              // no args to complete
+              suggestions = [];
+            }
+            prefix = argPrefix;
+          }
+
+          if (!suggestions.length) return;
+
+          if (suggestions.length === 1) {
+            const completion = suggestions[0];
+            const base = beforeCaret.slice(
+              0,
+              beforeCaret.length - prefix.length
+            );
+            const completed = base + completion + (addTrailingSpace ? " " : "");
+            commandInput.value = completed + full.slice(caretIndex);
+            updateBlockCaretPosition();
+            return;
+          }
+
+          // Multiple matches: show and complete to common prefix
+          const cp = commonPrefix(suggestions);
+          if (cp && cp.length > prefix.length) {
+            const base = beforeCaret.slice(
+              0,
+              beforeCaret.length - prefix.length
+            );
+            commandInput.value = base + cp + full.slice(caretIndex);
+            updateBlockCaretPosition();
+          }
+          addOutput(suggestions.join("    "));
+        }
 
         function addToHistory(command) {
           const commandLine = document.createElement("div");
@@ -333,7 +562,11 @@ ${
   isRoot
     ? "Root commands:\n  nano [file]         - Edit a file\n  rm [file]           - Remove a file\n  touch [file]        - Create a new file"
     : ""
-}`;
+}
+
+Notes:
+- Use 'cd' only for directories (e.g., 'cd education').
+- To open files, use 'cat' (e.g., 'cat university.txt').`;
           addOutput(helpText, false);
         }
 
@@ -371,6 +604,8 @@ ${
               currentDir = "~";
             }
             addOutput("");
+          } else if (arg && arg.endsWith(".txt")) {
+            addOutput(`cd: '${arg}' is a file. Use 'cat ${arg}' to view it.`);
           } else if (
             currentDir === "~" &&
             [
@@ -408,6 +643,33 @@ Passionate about building secure systems and extracting insights from complex da
 - Data Analysis: Python, R, SQL, Data visualization
 - Machine Learning: TensorFlow, PyTorch, NLP, Computer vision`;
             } else if (arg === "contact.txt") {
+              content = `Contact Information:
+Email: contact@example.com
+GitHub: github.com/username
+LinkedIn: linkedin.com/in/username
+Twitter: @username`;
+            } else {
+              content = `cat: ${arg}: No such file in current directory`;
+            }
+          } else if (currentDir === "~/about") {
+            if (arg === "about.txt") {
+              content = `About Me:
+I'm a cybersecurity and data science professional with expertise in machine learning and data analysis. 
+Passionate about building secure systems and extracting insights from complex datasets.`;
+            } else {
+              content = `cat: ${arg}: No such file in current directory`;
+            }
+          } else if (currentDir === "~/skills") {
+            if (arg === "skills.txt") {
+              content = `Technical Skills:
+- Cybersecurity: Penetration testing, Security analysis, Network security
+- Data Analysis: Python, R, SQL, Data visualization
+- Machine Learning: TensorFlow, PyTorch, NLP, Computer vision`;
+            } else {
+              content = `cat: ${arg}: No such file in current directory`;
+            }
+          } else if (currentDir === "~/contact") {
+            if (arg === "contact.txt") {
               content = `Contact Information:
 Email: contact@example.com
 GitHub: github.com/username
@@ -554,12 +816,63 @@ Twitter: @username`;
           commandInput.focus();
         };
 
-        // Custom cursor effect
-        setInterval(() => {
-          const cursor = document.getElementById("cursor");
-          cursor.style.visibility =
-            cursor.style.visibility === "hidden" ? "visible" : "hidden";
-        }, 500);
+        // Block caret that follows the input caret position
+        const blockCaret = document.getElementById("block-caret");
+        const inputMeasure = document.getElementById("input-measure");
+
+        function updateBlockCaretPosition() {
+          const input = commandInput;
+          if (!document.activeElement || document.activeElement !== input) {
+            blockCaret.style.display = "none";
+            return;
+          }
+
+          blockCaret.style.display = "block";
+
+          // Mirror text up to caret to measure width
+          const caretIndex = input.selectionStart || 0;
+          const textBeforeCaret = input.value.slice(0, caretIndex);
+          inputMeasure.textContent = textBeforeCaret;
+
+          // Ensure measurement uses same font metrics
+          const computed = getComputedStyle(input);
+          inputMeasure.style.font = computed.font;
+          inputMeasure.style.letterSpacing = computed.letterSpacing;
+          inputMeasure.style.left = 0;
+          inputMeasure.style.top = 0;
+
+          // Compute position within container
+          const containerRect = input.parentElement.getBoundingClientRect();
+          const inputRect = input.getBoundingClientRect();
+          const leftPadding = parseFloat(computed.paddingLeft) || 0;
+          const leftWithinContainer =
+            inputRect.left -
+            containerRect.left +
+            leftPadding +
+            inputMeasure.offsetWidth -
+            input.scrollLeft;
+
+          // Position caret
+          blockCaret.style.left = leftWithinContainer + "px";
+          blockCaret.style.top = inputRect.top - containerRect.top + "px";
+
+          // Match caret height to line-height
+          blockCaret.style.height = computed.lineHeight;
+        }
+
+        ["input", "keyup", "click", "focus"].forEach((evt) => {
+          commandInput.addEventListener(evt, updateBlockCaretPosition);
+        });
+        document.addEventListener("selectionchange", () => {
+          if (document.activeElement === commandInput)
+            updateBlockCaretPosition();
+        });
+        commandInput.addEventListener("blur", () => {
+          blockCaret.style.display = "none";
+        });
+
+        // Initial position
+        updateBlockCaretPosition();
       });
     </script>
   </body>
