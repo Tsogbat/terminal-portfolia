@@ -4,183 +4,103 @@ An interactive terminal-style portfolio website built with HTML, CSS, and JavaSc
 
 ## 🚀 Features
 
-- **Terminal Interface**: Authentic command-line experience with commands like `ls`, `cd`, `cat`, etc.
-- **Interactive Navigation**: Browse through different sections of your portfolio
-- **Theme Toggle**: Switch between dark and light modes
-- **Command History**: Navigate through previous commands with arrow keys
-- **Autocomplete**: Tab completion for commands and file names
-- **Root Access**: Special commands when using `sudo su`
-- **Responsive Design**: Works on desktop and mobile devices
+- **Terminal Interface**: `ls`, `cd`, `cat`, history, autocomplete
+- **Absolute paths**: `cat ~/about/about.txt` and (from home only) `cat about/about.txt`
+- **Downloads**: `wget` supports any `.pdf` path or URL, e.g. `wget ~/about/text_resume.pdf`
+- **Markdown rendering**: `cat` on `.md` files (e.g., `cat ~/README.md`) renders safely
+- **Sanitized HTML output**: All HTML is sanitized to prevent XSS
+- **Theme**: `theme dark|light|auto` with system preference support
+- **Zoom**: Cmd/Ctrl `+` / `-` / `0` magnifies text (persists)
 
 ## 📁 File Structure
 
 ```
 terminal_portfolia/
-├── index.html                    # Main HTML file
-├── styles.css                    # All CSS styles and themes
-├── js/                          # JavaScript modules
+├── index.html
+├── styles.css
+├── js/
 │   ├── core/
-│   │   └── terminal.js          # Core terminal functionality
+│   │   └── terminal.js          # Core terminal (history, output, safe HTML)
 │   ├── commands/
-│   │   └── commandProcessor.js  # Command handling and processing
+│   │   └── commandProcessor.js  # All commands + path resolution
 │   ├── features/
-│   │   └── autocomplete.js      # Tab completion functionality
+│   │   └── autocomplete.js      # Tab completion
 │   ├── data/
-│   │   └── dataManager.js       # Portfolio data management
+│   │   └── dataManager.js       # Loads split data + Ajv validation
 │   ├── ui/
-│   │   └── uiManager.js         # UI elements and block caret
-│   └── app.js                   # Main application coordinator
-├── data/                        # Portfolio data
-│   ├── portfolio.json           # Your current portfolio
-│   └── example-portfolio.json   # Template for customization
-└── README.md                    # This file
+│   │   └── uiManager.js         # UI caret, etc.
+│   ├── utils/
+│   │   ├── sanitize.js          # Safe HTML sanitizer
+│   │   └── markdown.js          # Minimal safe Markdown renderer
+│   └── app.js                   # App boot (theme, zoom, wiring)
+├── data/
+│   ├── about.json
+│   ├── skills.json
+│   ├── contact.json
+│   ├── projects.json
+│   ├── education.json
+│   ├── experience.json
+│   ├── directories.json         # Virtual filesystem map
+│   └── schema.json              # JSON Schema for validation (Ajv)
+└── README.md
 ```
 
 ## 🛠️ Customization
 
-### Adding/Editing Portfolio Content
-
-The easiest way to update your portfolio is by editing the `data/portfolio.json` file. This file contains all the content that appears in your terminal.
-
-#### Structure of portfolio.json:
-
-```json
-{
-  "about": {
-    "title": "About Me",
-    "content": "Your personal description..."
-  },
-  "skills": {
-    "title": "Technical Skills",
-    "categories": [
-      {
-        "name": "Category Name",
-        "skills": ["Skill 1", "Skill 2", "Skill 3"]
-      }
-    ]
-  },
-  "contact": {
-    "title": "Contact Information",
-    "details": {
-      "email": "your@email.com",
-      "github": "github.com/username",
-      "linkedin": "linkedin.com/in/username"
-    }
-  },
-  "projects": [
-    {
-      "id": "project1.txt",
-      "title": "Project Title",
-      "description": "Project description",
-      "achievements": ["Achievement 1", "Achievement 2"]
-    }
-  ],
-  "education": [
-    {
-      "id": "university.txt",
-      "title": "Degree Title",
-      "institution": "University Name",
-      "period": "2020-2024",
-      "specialization": "Your Major",
-      "gpa": "3.9/4.0"
-    }
-  ],
-  "experience": [
-    {
-      "id": "job1.txt",
-      "title": "Job Title",
-      "company": "Company Name",
-      "period": "2020-2024",
-      "achievements": ["Achievement 1", "Achievement 2"]
-    }
-  ],
-  "directories": {
-    "~": ["about", "skills", "projects", "education", "experience", "contact"],
-    "~/about": ["about.txt"],
-    "~/skills": ["skills.txt"],
-    "~/projects": ["project1.txt", "project2.txt"],
-    "~/education": ["university.txt", "certificates.txt"],
-    "~/experience": ["job1.txt", "job2.txt"],
-    "~/contact": ["contact.txt"]
-  }
-}
-```
-
-### Adding New Sections
-
-1. **Add content** to the appropriate section in `portfolio.json`
-2. **Update directories** to include new files
-3. **Add new commands** in `script.js` if needed
-
-### Adding New Commands
-
-To add new terminal commands, edit the `processCommand` function in `js/commands/commandProcessor.js`:
-
-```javascript
-case "newcommand":
-  // Your new command logic here
-  break;
-```
-
-## 🎨 Styling
-
-- **CSS Variables**: Easy theme customization in `styles.css`
-- **Responsive Design**: Mobile-friendly layout
-- **Animations**: Smooth transitions and cursor effects
+- Edit content in `data/*.json`. Top-level navigation comes from `data/directories.json`.
+- Data is validated against `data/schema.json` via Ajv at load.
+- Add PDFs (e.g., `text_resume.pdf`) to the project; they can be downloaded via `wget <path>.pdf` with no code changes.
+- Add Markdown files anywhere and view with `cat <path>.md`.
 
 ## 🚀 Getting Started
 
-1. Clone or download this repository
-2. Open `index.html` in your web browser
-3. Start typing commands like `help` to get started
+Because the app `fetch`es JSON/Markdown files, it's best to serve it over HTTP (file:// may block requests):
+
+1. Start a simple static server from the project root:
+   - Python: `python3 -m http.server 8000`
+   - Node: `npx serve .` (or any static server)
+   - VS Code: Live Server extension
+2. Visit `http://localhost:8000` (or the URL your server shows)
+3. Type `help` to see commands
+
+Tip: It will still load fallback demo data if network requests fail, but your own `data/*.json` won't show unless served over HTTP.
 
 ## 📝 Available Commands
 
-- `help` - Show available commands
-- `welcome` - Display welcome message and available commands
-- `ls` - List files and directories
-- `cd [directory]` - Change directory
-- `cat [file]` - View file contents
-- `clear` - Clear terminal
-- `whoami` - Show current user
-- `pwd` - Print working directory
-- `theme` - Toggle between dark and light themes
-- `sudo su` - Gain root access (for additional commands)
+- `help` — Show commands
+- `welcome` — Show welcome
+- `ls` — List files/sections
+- `cd [section]` — Change section
+- `pwd` — Print working dir
+- `cat [file|path]` — View `.txt` or `.md`. Examples:
+  - From home: `cat about/about.txt` or `cat ~/about/about.txt`
+  - From other dirs: use `~/about/about.txt`
+- `wget <file|path>` — Download `.pdf` by relative or absolute path, or full URL
+- `theme [dark|light|auto]` — Set/toggle theme
+- `social` — Show social links
+- `open <url|alias>` — Open URL/alias (`github`, `linkedin`, `email`)
+- `history [clear]` — Show/clear command history
+- `sudo su` — Gain root (enables `nano`, `rm`, `touch`)
 
-### Root Commands (after `sudo su`):
+### Keyboard shortcuts
 
-- `nano [file]` - Edit a file
-- `rm [file]` - Remove a file
-- `touch [file]` - Create a new file
+- Arrow Up/Down: navigate command history
+- Tab: autocomplete commands/args
+- Cmd/Ctrl + / - / 0: zoom text in/out/reset (persists)
 
-## 🔧 Development
+## 🔐 Security & Safety
 
-### Adding New Features
+- All HTML output is sanitized (events stripped, safe links enforced)
+- Markdown is rendered in safe mode (escaped, limited tags)
 
-1. **HTML**: Add new elements to `index.html`
-2. **CSS**: Style new elements in `styles.css`
-3. **JavaScript**: Add functionality in `script.js`
+## 🎨 Styling & UX
 
-### Testing
-
-- Test in different browsers
-- Test responsive design on mobile devices
-- Verify all commands work correctly
+- Zoom: Cmd/Ctrl `+`, `-`, `0` scales terminal text only (layout stays full width)
+- Theme persists; `auto` follows system preference
 
 ## 📱 Browser Compatibility
 
-- Chrome (recommended)
-- Firefox
-- Safari
-- Edge
-
-## 🤝 Contributing
-
-Feel free to submit issues and enhancement requests!
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
+- Chrome (recommended), Firefox, Safari, Edge
 
 ---
 

@@ -90,13 +90,33 @@ class Terminal {
     this.scrollToBottom();
   }
 
-  addOutput(text, typing = false) {
+  addOutput(text) {
     const outputDiv = document.createElement("div");
     outputDiv.className = "output";
     outputDiv.textContent = text;
     this.historyDiv.appendChild(outputDiv);
 
     this.scrollToBottom();
+  }
+
+  addHtml(html) {
+    const outputDiv = document.createElement("div");
+    outputDiv.className = "output";
+    const safe = window.sanitizeHtml ? window.sanitizeHtml(html) : html;
+    outputDiv.innerHTML = safe;
+    this.historyDiv.appendChild(outputDiv);
+    this._bindCommandLinks(outputDiv);
+    this.scrollToBottom();
+  }
+
+  _bindCommandLinks(root) {
+    root.querySelectorAll("[data-cmd]").forEach((a) => {
+      a.addEventListener("click", (e) => {
+        e.preventDefault();
+        const cmd = a.getAttribute("data-cmd") || "";
+        if (window.runCommand) window.runCommand(cmd);
+      });
+    });
   }
 
   addAscii(text) {

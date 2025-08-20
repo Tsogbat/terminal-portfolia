@@ -1,7 +1,7 @@
 {
   "directories": {
     "~": ["about", "skills", "projects", "education", "experience", "contact"],
-    "~/about": ["about.txt", "text_resume.pdf"],
+    "~/about": ["about.txt", "test_resume.pdf"],
     "~/skills": ["skills.txt"],
     "~/projects": ["project1.txt", "project2.txt", "project3.txt"],
     "~/education": ["Asia-University.txt", "UFE.txt", "certificates.txt"],

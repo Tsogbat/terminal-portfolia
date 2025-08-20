@@ -11,6 +11,7 @@ class CommandProcessor {
       clear: this.clearTerminal.bind(this),
       whoami: this.showUser.bind(this),
       pwd: this.showCurrentDir.bind(this),
+      echo: this.echoCommand.bind(this),
       theme: this.themeCommand.bind(this),
       resume: this.resumeCommand.bind(this),
       social: this.socialCommand.bind(this),
@@ -22,6 +23,44 @@ class CommandProcessor {
       rm: this.simulateRm.bind(this),
       touch: this.simulateTouch.bind(this),
     };
+  }
+
+  resolvePathLike(arg) {
+    // Supports ~/section/file.ext and (from ~ only) section/file.ext
+    if (!arg) return { dir: this.terminal.getCurrentDir(), file: null };
+    const trimmed = arg.trim();
+    const rootSections = new Set([
+      "about",
+      "skills",
+      "projects",
+      "education",
+      "experience",
+      "contact",
+    ]);
+    if (trimmed.startsWith("~/")) {
+      const parts = trimmed.slice(2).split("/");
+      if (parts.length === 1) return { dir: "~", file: parts[0] };
+      const section = parts.shift();
+      const file = parts.join("/");
+      return { dir: `~/${section}`, file };
+    }
+    if (trimmed.includes("/")) {
+      const parts = trimmed.split("/");
+      const maybeSection = parts[0];
+      // Only allow section/file shortcut from home (~)
+      if (
+        this.terminal.getCurrentDir() === "~" &&
+        rootSections.has(maybeSection)
+      ) {
+        parts.shift();
+        const file = parts.join("/");
+        return { dir: `~/${maybeSection}`, file };
+      }
+      // otherwise treat as relative path
+      return { dir: this.terminal.getCurrentDir(), file: trimmed };
+    }
+    // relative to current dir
+    return { dir: this.terminal.getCurrentDir(), file: trimmed };
   }
 
   processCommand(command) {
@@ -47,7 +86,8 @@ class CommandProcessor {
   welcome             - Display welcome message and available commands
   ls                  - List available sections
   cd [section]        - Navigate into a section
-  cat [file]          - View details of a file
+  cat [file|path]     - View a file (.txt or .md). Supports ~/about/about.txt or about/about.txt
+  echo [text]         - Print text
   clear               - Clear the terminal
   whoami              - Show current user
   pwd                 - Print working directory
@@ -56,7 +96,7 @@ class CommandProcessor {
   social              - Show social links
   open <url|alias>    - Open a link in new tab
   history [clear]     - Show or clear command history
-  wget <file.pdf>     - Download a PDF (e.g., text_resume.pdf)
+  wget <file|path>    - Download a PDF (e.g., ~/about/text_resume.pdf or about/text_resume.pdf)
   
 ${
   this.terminal.isRoot
@@ -65,19 +105,15 @@ ${
 }
 
 Notes:
-- Use 'cd' only for directories (e.g., 'cd education').
-- To open files, use 'cat' (e.g., 'cat university.txt').`;
+- Use 'cd' only for sections (e.g., 'cd education').
+- You can cat absolute paths like 'cat ~/about/about.txt' or 'cat about/about.txt'.`;
 
     this.terminal.addOutput(helpText, false);
   }
 
   executeWelcome() {
-    const welcomeOutput = document.createElement("div");
-    welcomeOutput.className = "output";
-    welcomeOutput.innerHTML = `Welcome to my terminal portfolio! Type <span class=\"link\" onclick=\"runCommand('help')\">help</span> to get started or <span class=\"link\" onclick=\"runCommand('theme')\">theme</span> to toggle modes.`;
-
-    this.terminal.getHistoryDiv().appendChild(welcomeOutput);
-    this.terminal.scrollToBottom();
+    const html = `Welcome to my terminal portfolio! Type <a href="#" data-cmd="help">help</a> to get started or <a href="#" data-cmd="theme">theme</a> to toggle modes.`;
+    this.terminal.addHtml(html);
   }
 
   listDirectory() {
@@ -163,22 +199,53 @@ Notes:
     }
 
     let content = "";
-    const currentDir = this.terminal.getCurrentDir();
+    const { dir: targetDir, file: targetFile } = this.resolvePathLike(arg);
+    const dirMap =
+      portfolioData.directories?.directories || portfolioData.directories || {};
 
+    if (!targetFile) {
+      this.terminal.addOutput(`cat: ${arg}: No such file`);
+      return;
+    }
+
+    // PDFs are binary; hint to wget
+    if (targetFile.toLowerCase().endsWith(".pdf")) {
+      const files = dirMap[targetDir] || [];
+      if (files.includes(targetFile)) {
+        this.terminal.addOutput(
+          `Binary file '${targetFile}' cannot be displayed. Use: wget ${targetDir}/${targetFile}`
+        );
+      } else {
+        this.terminal.addOutput(`cat: ${arg}: No such file in ${targetDir}`);
+      }
+      return;
+    }
+
+    // Markdown support
+    if (targetFile.toLowerCase().endsWith(".md")) {
+      fetch(`${targetDir}/${targetFile}`.replace("~/", ""))
+        .then((r) => (r.ok ? r.text() : Promise.reject("Not found")))
+        .then((md) => {
+          const html = window.renderMarkdown ? window.renderMarkdown(md) : md;
+          this.terminal.addHtml(html);
+        })
+        .catch(() => this.terminal.addOutput(`cat: ${arg}: No such file`));
+      return;
+    }
+
+    // Text content sourced from structured data (about/skills/contact)
     const asciiArt = [
       "  _____                _           _   ",
       " |_   _|__   ___  __ _| |__   __ _| |_ ",
       "   | | / __|/ _ \\/  _ | '_ \\/  _ | __|",
       "   | | \\__ \\ (_)|| (_|| |_)|| (_|| |_ ",
-      "   |_| |___/\\___/\\__, |_.__/\\__,_|\\__|",
+      "   |_| |___/\\\\___/\\\\__, |_.__/\\\\__,_|\\\\__|",
       "                   |__|                ",
     ].join("\n");
 
-    // Helper function to format content
     const formatContent = (data, type) => {
       switch (type) {
         case "about": {
-          // Render ASCII art separately to preserve formatting
           this.terminal.addAscii(asciiArt);
           return `${data.title}:\n${data.content}`;
         }
@@ -200,101 +267,20 @@ Notes:
           });
           return contactContent.trim();
         }
-        case "project": {
-          let projectContent = `${data.title}:\n- ${data.description}\n`;
-          data.achievements.forEach((achievement) => {
-            projectContent += `- ${achievement}\n`;
-          });
-          return projectContent.trim();
-        }
-        case "education": {
-          if (data.institution) {
-            return `${data.title}:\n- ${data.institution}, ${data.period}\n- Specialized in ${data.specialization}\n- GPA: ${data.gpa}`;
-          } else {
-            let certContent = `${data.title}:\n`;
-            data.certificates.forEach((cert) => {
-              certContent += `- ${cert}\n`;
-            });
-            return certContent.trim();
-          }
-        }
-        case "experience": {
-          return `${data.title} - ${data.company} (${
-            data.period
-          }):\n${data.achievements
-            .map((achievement) => `- ${achievement}`)
-            .join("\n")}`;
-        }
         default:
           return `cat: ${arg}: No such file in current directory`;
       }
     };
 
-    // Special-case: binary files like PDFs
-    if (arg.toLowerCase().endsWith(".pdf")) {
-      // Only allow showing hint if the PDF exists in current directory mapping
-      const data = this.terminal.getPortfolioData();
-      const dirMap = data?.directories?.directories || data?.directories || {};
-      const files = dirMap[currentDir] || [];
-      if (files.includes(arg)) {
-        this.terminal.addOutput(
-          `Binary file '${arg}' cannot be displayed. Use: wget ${arg}`
-        );
-      } else {
-        this.terminal.addOutput(
-          `cat: ${arg}: No such file in current directory`
-        );
-      }
-      return;
-    }
-
-    // Enforce: must be inside the correct directory for the file
-    if (currentDir === "~/about") {
-      if (arg === "about.txt") {
-        content = formatContent(portfolioData.about, "about");
-      } else {
-        content = `cat: ${arg}: No such file in current directory`;
-      }
-    } else if (currentDir === "~/skills") {
-      if (arg === "skills.txt") {
-        content = formatContent(portfolioData.skills, "skills");
-      } else {
-        content = `cat: ${arg}: No such file in current directory`;
-      }
-    } else if (currentDir === "~/contact") {
-      if (arg === "contact.txt") {
-        content = formatContent(portfolioData.contact, "contact");
-      } else {
-        content = `cat: ${arg}: No such file in current directory`;
-      }
-    } else if (currentDir === "~/projects") {
-      const project = portfolioData.projects.projects.find((p) => p.id === arg);
-      if (project) {
-        content = formatContent(project, "project");
-      } else {
-        content = `cat: ${arg}: No such file in current directory`;
-      }
-    } else if (currentDir === "~/education") {
-      const education = portfolioData.education.education.find(
-        (e) => e.id === arg
-      );
-      if (education) {
-        content = formatContent(education, "education");
-      } else {
-        content = `cat: ${arg}: No such file in current directory`;
-      }
-    } else if (currentDir === "~/experience") {
-      const experience = portfolioData.experience.experience.find(
-        (e) => e.id === arg
-      );
-      if (experience) {
-        content = formatContent(experience, "experience");
-      } else {
-        content = `cat: ${arg}: No such file in current directory`;
-      }
+    if (targetDir === "~/about" && targetFile === "about.txt") {
+      content = formatContent(portfolioData.about, "about");
+    } else if (targetDir === "~/skills" && targetFile === "skills.txt") {
+      content = formatContent(portfolioData.skills, "skills");
+    } else if (targetDir === "~/contact" && targetFile === "contact.txt") {
+      content = formatContent(portfolioData.contact, "contact");
     } else {
-      // Home or any other directory: disallow direct cat
-      content = `cat: ${arg}: No such file in current directory`;
+      this.terminal.addOutput(`cat: ${arg}: No such file`);
+      return;
     }
 
     if (content) this.terminal.addOutput(content);
@@ -310,6 +296,11 @@ Notes:
 
   showCurrentDir() {
     this.terminal.addOutput(this.terminal.getCurrentDir());
+  }
+
+  echoCommand(arg) {
+    // Simple echo: print exactly what follows echo (empty line if no arg)
+    this.terminal.addOutput(arg ? arg : "");
   }
 
   themeCommand(arg) {
@@ -359,12 +350,11 @@ Notes:
   }
 
   resumeCommand() {
-    // Inform how to download using wget
     const files = this.getPdfFilesForCurrentDir();
     const hint = files.length
       ? `Available PDFs here: ${files.join(", ")}`
       : "(put your .pdf file in the project and reference it by name)";
-    const msg = `You can download a resume PDF by running:\n\n  wget <your_resume.pdf>\n\nExample:\n  wget text_resume.pdf\n\n${hint}`;
+    const msg = `You can download a resume PDF by running:\n\n  wget <your_resume.pdf>\n\nExamples:\n  wget text_resume.pdf\n  wget ~/about/text_resume.pdf\n\n${hint}`;
     this.terminal.addOutput(msg);
   }
 
@@ -377,20 +367,26 @@ Notes:
   }
 
   wgetCommand(arg) {
-    const file = (arg || "").trim();
-    if (!file) {
+    const pathArg = (arg || "").trim();
+    if (!pathArg) {
       this.terminal.addOutput("wget: missing URL");
       return;
     }
-    if (!/\.pdf(\?.*)?$/i.test(file)) {
+
+    const resolved = this.resolvePathLike(pathArg);
+    let url = pathArg;
+    if (resolved.file) {
+      url = `${resolved.dir}/${resolved.file}`.replace("~/", "");
+    }
+
+    if (!/\.pdf(\?.*)?$/i.test(url)) {
       this.terminal.addOutput("wget: only .pdf downloads are supported");
       return;
     }
-    // Allow any correct file name; serve relative to site root
-    const url = file.match(/^https?:\/\//) ? file : file.replace(/^\/*/, "");
+
     const link = document.createElement("a");
     link.href = url;
-    link.download = ""; // suggest download
+    link.download = "";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
