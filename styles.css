@@ -9,6 +9,7 @@
   --text-light: #1a1a1a;
   --primary-light: #007acc;
   --secondary-light: #999;
+  --text-zoom: 1; /* new: scales terminal text */
 }
 
 body {
@@ -17,6 +18,11 @@ body {
   padding: 0;
   overflow-x: hidden;
   transition: all 0.3s ease;
+}
+
+/* Scale text inside terminal only */
+#terminal {
+  font-size: calc(1rem * var(--text-zoom, 1));
 }
 
 .cursor {
@@ -136,6 +142,14 @@ body {
 
 .output.welcome {
   white-space: normal;
+}
+
+.output.ascii pre {
+  white-space: pre;
+  overflow-x: auto;
+  margin: 0 0 16px 0;
+  font-family: "JetBrains Mono", monospace;
+  line-height: 1.1;
 }
 
 .link {

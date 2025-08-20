@@ -1,0 +1,23 @@
+{
+  "title": "Technical Skills",
+  "categories": [
+    {
+      "name": "Cybersecurity",
+      "skills": ["Penetration testing", "Kali Linux tools"]
+    },
+    {
+      "name": "Data Analysis",
+      "skills": [
+        "Python",
+        "Tableau",
+        "MSSQL",
+        "Data visualization",
+        "Data cleaning"
+      ]
+    },
+    {
+      "name": "Machine Learning",
+      "skills": ["TensorFlow", "PyTorch", "NLP", "Data preprocessing"]
+    }
+  ]
+}

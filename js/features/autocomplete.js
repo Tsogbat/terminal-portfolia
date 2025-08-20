@@ -3,8 +3,24 @@ class Autocomplete {
   constructor(terminal) {
     this.terminal = terminal;
     this.commands = [
-      "help", "welcome", "ls", "cd", "cat", "clear", 
-      "whoami", "pwd", "theme", "sudo", "nano", "rm", "touch"
+      "help",
+      "welcome",
+      "ls",
+      "cd",
+      "cat",
+      "clear",
+      "whoami",
+      "pwd",
+      "theme",
+      "resume",
+      "social",
+      "open",
+      "history",
+      "wget",
+      "sudo",
+      "nano",
+      "rm",
+      "touch",
     ];
   }
 
@@ -12,7 +28,7 @@ class Autocomplete {
     const full = this.terminal.getCommandInput().value;
     const caretIndex = this.terminal.getCommandInput().selectionStart || 0;
     const afterCaret = full.slice(caretIndex);
-    
+
     if (afterCaret.trim() !== "") return; // only autocomplete at end
 
     const beforeCaret = full.slice(0, caretIndex);
@@ -31,18 +47,50 @@ class Autocomplete {
     } else {
       const first = parts[0];
       const argPrefix = hasTrailingSpace ? "" : parts[parts.length - 1];
-      
+
       if (first === "cd") {
         suggestions = this.filterMatches(this.listDirsForCd(), argPrefix);
         addTrailingSpace = true;
       } else if (first === "cat") {
-        suggestions = this.filterMatches(this.listFilesForCurrentDir(), argPrefix);
+        suggestions = this.filterMatches(
+          this.listFilesForCurrentDir(),
+          argPrefix
+        );
       } else if (first === "sudo") {
         suggestions = this.filterMatches(["su"], argPrefix);
         addTrailingSpace = true;
       } else if (["nano", "rm", "touch"].includes(first)) {
-        suggestions = this.filterMatches(this.listFilesForCurrentDir(), argPrefix);
-      } else if (["ls", "clear", "whoami", "pwd", "help", "welcome", "theme"].includes(first)) {
+        suggestions = this.filterMatches(
+          this.listFilesForCurrentDir(),
+          argPrefix
+        );
+      } else if (first === "theme") {
+        suggestions = this.filterMatches(["dark", "light", "auto"], argPrefix);
+        addTrailingSpace = true;
+      } else if (first === "open") {
+        const aliases = ["github", "linkedin", "email"];
+        suggestions = this.filterMatches(aliases, argPrefix);
+      } else if (first === "history") {
+        suggestions = this.filterMatches(["clear"], argPrefix);
+        addTrailingSpace = true;
+      } else if (first === "wget") {
+        // Suggest any PDFs from current directory
+        const pdfs = this.listFilesForCurrentDir().filter((f) =>
+          /\.pdf$/i.test(f)
+        );
+        suggestions = this.filterMatches(pdfs, argPrefix);
+      } else if (
+        [
+          "ls",
+          "clear",
+          "whoami",
+          "pwd",
+          "help",
+          "welcome",
+          "social",
+          "resume",
+        ].includes(first)
+      ) {
         // no args to complete
         suggestions = [];
       }
@@ -55,8 +103,9 @@ class Autocomplete {
       const completion = suggestions[0];
       const base = beforeCaret.slice(0, beforeCaret.length - prefix.length);
       const completed = base + completion + (addTrailingSpace ? " " : "");
-      this.terminal.getCommandInput().value = completed + full.slice(caretIndex);
-      
+      this.terminal.getCommandInput().value =
+        completed + full.slice(caretIndex);
+
       if (window.updateBlockCaretPosition) {
         window.updateBlockCaretPosition();
       }
@@ -67,22 +116,27 @@ class Autocomplete {
     const cp = this.commonPrefix(suggestions);
     if (cp && cp.length > prefix.length) {
       const base = beforeCaret.slice(0, beforeCaret.length - prefix.length);
-      this.terminal.getCommandInput().value = base + cp + full.slice(caretIndex);
-      
+      this.terminal.getCommandInput().value =
+        base + cp + full.slice(caretIndex);
+
       if (window.updateBlockCaretPosition) {
         window.updateBlockCaretPosition();
       }
     }
-    
+
     this.terminal.addOutput(suggestions.join("    "));
   }
 
   listDirsForCd() {
     const portfolioData = this.terminal.getPortfolioData();
     if (!portfolioData) return [".."];
-    
+
     if (this.terminal.getCurrentDir() === "~") {
-      return portfolioData.directories["~"] || [".."];
+      const dirMap =
+        portfolioData.directories?.directories ||
+        portfolioData.directories ||
+        {};
+      return dirMap["~"] || [".."]; // top-level sections
     }
     return [".."]; // allow going up elsewhere
   }
@@ -90,8 +144,10 @@ class Autocomplete {
   listFilesForCurrentDir() {
     const portfolioData = this.terminal.getPortfolioData();
     if (!portfolioData) return [];
-    
-    return portfolioData.directories[this.terminal.getCurrentDir()] || [];
+
+    const dirMap =
+      portfolioData.directories?.directories || portfolioData.directories || {};
+    return dirMap[this.terminal.getCurrentDir()] || [];
   }
 
   filterMatches(candidates, prefix) {

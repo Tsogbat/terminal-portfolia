@@ -1,0 +1,22 @@
+{
+  "projects": [
+    {
+      "id": "project1.txt",
+      "title": "CNN Autoencoder",
+      "description": "Cardiac anomaly detector using CNN autoencoder",
+      "achievements": [
+        "77% accuracy with only 35'000 ECG signals",
+        "87% recall in critical cases, 94% precision on normal rythms"
+      ]
+    },
+    {
+      "id": "project2.txt",
+      "title": "ML Model text classification",
+      "description": "Extracting texts from PubMed abstracts of prostate cancer",
+      "achievements": [
+        "95% accuracy with SVM",
+        "Successfuly increased accuracy by 25%+ with TF, TFIDF"
+      ]
+    }
+  ]
+}

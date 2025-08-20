@@ -1,0 +1,25 @@
+{
+  "education": [
+    {
+      "id": "Asia-University.txt",
+      "title": "Bachelor of Science in Data analysis",
+      "institution": "Dept. Computer Science and Information Engineering",
+      "period": "2024-2026",
+      "specialization": "Data analysis, Machine learning",
+      "gpa": "4.0/4.3"
+    },
+    {
+      "id": "UFE.txt",
+      "title": "Bachelor of Science in Information systems",
+      "institution": "Dept. Information systems management",
+      "period": "2022-2024",
+      "specialization": "Information systems",
+      "gpa": "3.44/4.0"
+    },
+    {
+      "id": "certificates.txt",
+      "title": "Professional Certifications",
+      "certificates": ["AWS Machine learning foundations"]
+    }
+  ]
+}

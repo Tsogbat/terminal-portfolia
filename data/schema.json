@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/portfolio.schema.json",
+  "type": "object",
+  "properties": {
+    "about": {
+      "type": "object",
+      "required": ["title", "content"],
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "required": ["title", "categories"],
+      "properties": {
+        "title": { "type": "string" },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "skills"],
+            "properties": {
+              "name": { "type": "string" },
+              "skills": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "contact": {
+      "type": "object",
+      "required": ["title", "details"],
+      "properties": {
+        "title": { "type": "string" },
+        "details": {
+          "type": "object",
+          "properties": {
+            "email": { "type": "string" },
+            "github": { "type": "string" },
+            "linkedin": { "type": "string" }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    "projects": {
+      "type": "object",
+      "required": ["projects"],
+      "properties": {
+        "projects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "title"],
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "achievements": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "education": {
+      "type": "object",
+      "required": ["education"],
+      "properties": {
+        "education": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "title"],
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "institution": { "type": "string" },
+              "period": { "type": "string" },
+              "specialization": { "type": "string" },
+              "gpa": { "type": "string" },
+              "certificates": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "experience": {
+      "type": "object",
+      "required": ["experience"],
+      "properties": {
+        "experience": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "title"],
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "company": { "type": "string" },
+              "period": { "type": "string" },
+              "achievements": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    },
+    "directories": {
+      "type": "object",
+      "required": ["directories"],
+      "properties": {
+        "directories": {
+          "type": "object",
+          "patternProperties": {
+            ".*": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

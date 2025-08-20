@@ -9,7 +9,7 @@ class Terminal {
     this.commandHistory = [];
     this.historyIndex = -1;
     this.portfolioData = null;
-    
+
     this.init();
   }
 
@@ -17,7 +17,7 @@ class Terminal {
     this.commandInput = document.getElementById("command-input");
     this.historyDiv = document.getElementById("history");
     this.promptSpan = document.getElementById("prompt");
-    
+
     this.loadCommandHistory();
     this.setupEventListeners();
     this.setupFocus();
@@ -99,9 +99,21 @@ class Terminal {
     this.scrollToBottom();
   }
 
+  addAscii(text) {
+    const container = document.createElement("div");
+    container.className = "output ascii";
+    const pre = document.createElement("pre");
+    pre.textContent = text;
+    pre.style.fontFamily = "monospace";
+    pre.style.whiteSpace = "pre";
+    container.appendChild(pre);
+    this.historyDiv.appendChild(container);
+    this.scrollToBottom();
+  }
+
   navigateHistory(direction) {
     if (!this.commandHistory.length) return;
-    
+
     if (this.historyIndex === -1) {
       this.historyIndex = this.commandHistory.length;
     }
@@ -117,7 +129,7 @@ class Terminal {
     } else {
       this.commandInput.value = this.commandHistory[this.historyIndex];
     }
-    
+
     // Update block caret position if function exists
     if (window.updateBlockCaretPosition) {
       window.updateBlockCaretPosition();

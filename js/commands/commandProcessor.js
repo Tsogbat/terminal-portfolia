@@ -11,7 +11,12 @@ class CommandProcessor {
       clear: this.clearTerminal.bind(this),
       whoami: this.showUser.bind(this),
       pwd: this.showCurrentDir.bind(this),
-      theme: this.toggleTheme.bind(this),
+      theme: this.themeCommand.bind(this),
+      resume: this.resumeCommand.bind(this),
+      social: this.socialCommand.bind(this),
+      open: this.openCommand.bind(this),
+      history: this.historyCommand.bind(this),
+      wget: this.wgetCommand.bind(this),
       sudo: this.handleSudo.bind(this),
       nano: this.simulateNano.bind(this),
       rm: this.simulateRm.bind(this),
@@ -38,16 +43,21 @@ class CommandProcessor {
 
   showHelp() {
     const helpText = `Available commands:
-    help                - Show this help message
-    welcome             - Display welcome message and available commands
-    ls                  - List available sections
-    cd [section]        - Navigate into a section
-    cat [file]          - View details of a file
-    clear               - Clear the terminal
-    whoami              - Show current user
-    pwd                 - Print working directory
-    theme               - Toggle between dark and light themes
-
+  help                - Show this help message
+  welcome             - Display welcome message and available commands
+  ls                  - List available sections
+  cd [section]        - Navigate into a section
+  cat [file]          - View details of a file
+  clear               - Clear the terminal
+  whoami              - Show current user
+  pwd                 - Print working directory
+  theme [mode]        - Theme: dark | light | auto
+  resume              - Show resume download instructions
+  social              - Show social links
+  open <url|alias>    - Open a link in new tab
+  history [clear]     - Show or clear command history
+  wget <file.pdf>     - Download a PDF (e.g., text_resume.pdf)
+  
 ${
   this.terminal.isRoot
     ? "Root commands:\n  nano [file]         - Edit a file\n  rm [file]           - Remove a file\n  touch [file]        - Create a new file"
@@ -64,7 +74,7 @@ Notes:
   executeWelcome() {
     const welcomeOutput = document.createElement("div");
     welcomeOutput.className = "output";
-    welcomeOutput.innerHTML = `Welcome to my terminal portfolio! Type <span class="link" onclick="insertCommand('help')">help</span> to get started or <span class="link" onclick="insertCommand('theme')">theme</span> to toggle modes.`;
+    welcomeOutput.innerHTML = `Welcome to my terminal portfolio! Type <span class=\"link\" onclick=\"runCommand('help')\">help</span> to get started or <span class=\"link\" onclick=\"runCommand('theme')\">theme</span> to toggle modes.`;
 
     this.terminal.getHistoryDiv().appendChild(welcomeOutput);
     this.terminal.scrollToBottom();
@@ -80,20 +90,24 @@ Notes:
     let output = "";
     const currentDir = this.terminal.getCurrentDir();
 
+    const dirMap =
+      portfolioData.directories?.directories || portfolioData.directories || {};
+
     if (currentDir === "~") {
-      const dirs = portfolioData.directories["~"];
-      output = dirs.join("/\n") + "/";
+      const dirs = dirMap["~"] || [];
+      output = dirs.join("/\n") + (dirs.length ? "/" : "");
     } else if (currentDir === "~/projects") {
-      const projects = portfolioData.projects;
+      const projects = portfolioData.projects.projects;
       output = projects.map((p) => `${p.id}    - ${p.title}`).join("\n");
     } else if (currentDir === "~/education") {
-      const education = portfolioData.education;
+      const education = portfolioData.education.education;
       output = education.map((e) => `${e.id}  - ${e.title}`).join("\n");
     } else if (currentDir === "~/experience") {
-      const experience = portfolioData.experience;
-      output = experience.map((e) => `${e.id}        - ${e.title}`);
+      const experience = portfolioData.experience.experience;
+      output = experience.map((e) => `${e.id}        - ${e.title}`).join("\n");
     } else if (currentDir === "~/about") {
-      output = `about.txt       - Personal information`;
+      const files = dirMap["~/about"] || ["about.txt"];
+      output = files.join("\n");
     } else if (currentDir === "~/skills") {
       output = `skills.txt      - Technical skills list`;
     } else if (currentDir === "~/contact") {
@@ -151,12 +165,24 @@ Notes:
     let content = "";
     const currentDir = this.terminal.getCurrentDir();
 
+    const asciiArt = [
+      "  _____                _           _   ",
+      " |_   _|__   ___  __ _| |__   __ _| |_ ",
+      "   | | / __|/ _ \\/  _ | '_ \\/  _ | __|",
+      "   | | \\__ \\ (_)|| (_|| |_)|| (_|| |_ ",
+      "   |_| |___/\\___/\\__, |_.__/\\__,_|\\__|",
+      "                   |__|                ",
+    ].join("\n");
+
     // Helper function to format content
     const formatContent = (data, type) => {
       switch (type) {
-        case "about":
+        case "about": {
+          // Render ASCII art separately to preserve formatting
+          this.terminal.addAscii(asciiArt);
           return `${data.title}:\n${data.content}`;
-        case "skills":
+        }
+        case "skills": {
           let skillsContent = `${data.title}:\n`;
           data.categories.forEach((category) => {
             skillsContent += `- ${category.name}: ${category.skills.join(
@@ -164,7 +190,8 @@ Notes:
             )}\n`;
           });
           return skillsContent.trim();
-        case "contact":
+        }
+        case "contact": {
           let contactContent = `${data.title}:\n`;
           Object.entries(data.details).forEach(([key, value]) => {
             contactContent += `${
@@ -172,13 +199,15 @@ Notes:
             }: ${value}\n`;
           });
           return contactContent.trim();
-        case "project":
+        }
+        case "project": {
           let projectContent = `${data.title}:\n- ${data.description}\n`;
           data.achievements.forEach((achievement) => {
             projectContent += `- ${achievement}\n`;
           });
           return projectContent.trim();
-        case "education":
+        }
+        case "education": {
           if (data.institution) {
             return `${data.title}:\n- ${data.institution}, ${data.period}\n- Specialized in ${data.specialization}\n- GPA: ${data.gpa}`;
           } else {
@@ -188,25 +217,41 @@ Notes:
             });
             return certContent.trim();
           }
-        case "experience":
+        }
+        case "experience": {
           return `${data.title} - ${data.company} (${
             data.period
           }):\n${data.achievements
             .map((achievement) => `- ${achievement}`)
             .join("\n")}`;
+        }
         default:
           return `cat: ${arg}: No such file in current directory`;
       }
     };
 
-    // Check current directory and find matching content
-    if (currentDir === "~" || currentDir === "~/about") {
+    // Special-case: binary files like PDFs
+    if (arg.toLowerCase().endsWith(".pdf")) {
+      // Only allow showing hint if the PDF exists in current directory mapping
+      const data = this.terminal.getPortfolioData();
+      const dirMap = data?.directories?.directories || data?.directories || {};
+      const files = dirMap[currentDir] || [];
+      if (files.includes(arg)) {
+        this.terminal.addOutput(
+          `Binary file '${arg}' cannot be displayed. Use: wget ${arg}`
+        );
+      } else {
+        this.terminal.addOutput(
+          `cat: ${arg}: No such file in current directory`
+        );
+      }
+      return;
+    }
+
+    // Enforce: must be inside the correct directory for the file
+    if (currentDir === "~/about") {
       if (arg === "about.txt") {
         content = formatContent(portfolioData.about, "about");
-      } else if (arg === "skills.txt") {
-        content = formatContent(portfolioData.skills, "skills");
-      } else if (arg === "contact.txt") {
-        content = formatContent(portfolioData.contact, "contact");
       } else {
         content = `cat: ${arg}: No such file in current directory`;
       }
@@ -223,31 +268,36 @@ Notes:
         content = `cat: ${arg}: No such file in current directory`;
       }
     } else if (currentDir === "~/projects") {
-      const project = portfolioData.projects.find((p) => p.id === arg);
+      const project = portfolioData.projects.projects.find((p) => p.id === arg);
       if (project) {
         content = formatContent(project, "project");
       } else {
         content = `cat: ${arg}: No such file in current directory`;
       }
     } else if (currentDir === "~/education") {
-      const education = portfolioData.education.find((e) => e.id === arg);
+      const education = portfolioData.education.education.find(
+        (e) => e.id === arg
+      );
       if (education) {
         content = formatContent(education, "education");
       } else {
         content = `cat: ${arg}: No such file in current directory`;
       }
     } else if (currentDir === "~/experience") {
-      const experience = portfolioData.experience.find((e) => e.id === arg);
+      const experience = portfolioData.experience.experience.find(
+        (e) => e.id === arg
+      );
       if (experience) {
         content = formatContent(experience, "experience");
       } else {
         content = `cat: ${arg}: No such file in current directory`;
       }
     } else {
+      // Home or any other directory: disallow direct cat
       content = `cat: ${arg}: No such file in current directory`;
     }
 
-    this.terminal.addOutput(content);
+    if (content) this.terminal.addOutput(content);
   }
 
   clearTerminal() {
@@ -262,16 +312,158 @@ Notes:
     this.terminal.addOutput(this.terminal.getCurrentDir());
   }
 
-  toggleTheme() {
-    if (document.body.classList.contains("dark")) {
-      document.body.classList.remove("dark");
-      document.body.classList.add("light");
-      localStorage.setItem("theme", "light");
-    } else {
+  themeCommand(arg) {
+    const mode = (arg || "").trim().toLowerCase();
+    if (!arg) {
+      // toggle
+      this.toggleTheme();
+      return;
+    }
+
+    if (["dark", "light"].includes(mode)) {
+      this.applyTheme(mode);
+      localStorage.setItem("theme", mode);
+      return;
+    }
+
+    if (mode === "auto") {
+      const prefersDark =
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+      this.applyTheme(prefersDark ? "dark" : "light");
+      localStorage.setItem("theme", "auto");
+      return;
+    }
+
+    this.terminal.addOutput("theme: invalid mode. Use: dark | light | auto");
+  }
+
+  applyTheme(mode) {
+    if (mode === "dark") {
       document.body.classList.remove("light");
       document.body.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark");
+      document.body.classList.add("light");
+    }
+  }
+
+  toggleTheme() {
+    if (document.body.classList.contains("dark")) {
+      this.applyTheme("light");
+      localStorage.setItem("theme", "light");
+    } else {
+      this.applyTheme("dark");
       localStorage.setItem("theme", "dark");
     }
+  }
+
+  resumeCommand() {
+    // Inform how to download using wget
+    const files = this.getPdfFilesForCurrentDir();
+    const hint = files.length
+      ? `Available PDFs here: ${files.join(", ")}`
+      : "(put your .pdf file in the project and reference it by name)";
+    const msg = `You can download a resume PDF by running:\n\n  wget <your_resume.pdf>\n\nExample:\n  wget text_resume.pdf\n\n${hint}`;
+    this.terminal.addOutput(msg);
+  }
+
+  getPdfFilesForCurrentDir() {
+    const data = this.terminal.getPortfolioData();
+    if (!data) return [];
+    const dirMap = data.directories?.directories || data.directories || {};
+    const files = dirMap[this.terminal.getCurrentDir()] || [];
+    return files.filter((f) => /\.pdf$/i.test(f));
+  }
+
+  wgetCommand(arg) {
+    const file = (arg || "").trim();
+    if (!file) {
+      this.terminal.addOutput("wget: missing URL");
+      return;
+    }
+    if (!/\.pdf(\?.*)?$/i.test(file)) {
+      this.terminal.addOutput("wget: only .pdf downloads are supported");
+      return;
+    }
+    // Allow any correct file name; serve relative to site root
+    const url = file.match(/^https?:\/\//) ? file : file.replace(/^\/*/, "");
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = ""; // suggest download
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    this.terminal.addOutput(`Downloading ${url} ...`);
+  }
+
+  socialCommand() {
+    const contact = this.terminal.getPortfolioData()?.contact?.details || {};
+    const links = [];
+    if (contact.github) links.push(`github: ${this.ensureUrl(contact.github)}`);
+    if (contact.linkedin)
+      links.push(`linkedin: ${this.ensureUrl(contact.linkedin)}`);
+    if (contact.email) links.push(`email: mailto:${contact.email}`);
+
+    if (!links.length) {
+      this.terminal.addOutput("No social links configured");
+      return;
+    }
+
+    this.terminal.addOutput(links.join("\n"));
+  }
+
+  openCommand(arg) {
+    if (!arg) {
+      this.terminal.addOutput("open: missing url or alias");
+      return;
+    }
+
+    const contact = this.terminal.getPortfolioData()?.contact?.details || {};
+    const aliases = {
+      github: contact.github ? this.ensureUrl(contact.github) : null,
+      linkedin: contact.linkedin ? this.ensureUrl(contact.linkedin) : null,
+      email: contact.email ? `mailto:${contact.email}` : null,
+    };
+
+    const target = aliases[arg] || this.ensureUrl(arg);
+    if (!target) {
+      this.terminal.addOutput(`open: invalid target '${arg}'`);
+      return;
+    }
+
+    window.open(target, "_blank");
+    this.terminal.addOutput(`Opening ${target} ...`);
+  }
+
+  ensureUrl(s) {
+    if (!s) return null;
+    if (
+      s.startsWith("http://") ||
+      s.startsWith("https://") ||
+      s.startsWith("mailto:")
+    )
+      return s;
+    return `https://${s}`;
+  }
+
+  historyCommand(arg) {
+    if (arg && arg.trim().toLowerCase() === "clear") {
+      localStorage.removeItem("commandHistory");
+      this.terminal.commandHistory = [];
+      this.terminal.addOutput("History cleared");
+      return;
+    }
+
+    if (!this.terminal.commandHistory.length) {
+      this.terminal.addOutput("History is empty");
+      return;
+    }
+
+    const lines = this.terminal.commandHistory
+      .map((c, i) => `${i + 1}  ${c}`)
+      .join("\n");
+    this.terminal.addOutput(lines);
   }
 
   handleSudo(arg) {

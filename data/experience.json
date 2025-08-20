@@ -1,0 +1,26 @@
+{
+  "experience": [
+    {
+      "id": "job1.txt",
+      "title": "Software developer",
+      "company": "iO Technology",
+      "period": "2024 Jan - 2024 Feb",
+      "achievements": [
+        "Conducted vulnerability assessments",
+        "Implemented security controls",
+        "Reduced security incidents by 40%"
+      ]
+    },
+    {
+      "id": "job2.txt",
+      "title": "Cyber security analyst",
+      "company": "Public CSIRT/CC of Mongolia",
+      "period": "2025 Jul-Present",
+      "achievements": [
+        "Developed ML models for business insights",
+        "Automated data pipelines",
+        "Improved decision-making processes"
+      ]
+    }
+  ]
+}
