@@ -1,0 +1,172 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap");
+
+:root {
+  --bg-dark: #1a1a1a;
+  --text-dark: #f0f0f0;
+  --primary-dark: #00ff9d;
+  --secondary-dark: #666;
+  --bg-light: #f0f0f0;
+  --text-light: #1a1a1a;
+  --primary-light: #007acc;
+  --secondary-light: #999;
+}
+
+body {
+  font-family: "JetBrains Mono", monospace;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  transition: all 0.3s ease;
+}
+
+.cursor {
+  display: inline-block;
+  width: 10px;
+  height: 20px;
+  background-color: var(--primary);
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+}
+
+@keyframes blink {
+  from,
+  to {
+    background-color: transparent;
+  }
+  50% {
+    background-color: var(--primary);
+  }
+}
+
+.typing {
+  border-right: 2px solid var(--primary);
+  white-space: nowrap;
+  overflow: hidden;
+  animation: typing 3.5s steps(40, end),
+    blink-caret 0.75s step-end infinite;
+}
+
+@keyframes typing {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink-caret {
+  from,
+  to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: var(--primary);
+  }
+}
+
+.command-line {
+  display: flex;
+  align-items: center;
+}
+
+.prompt {
+  color: var(--primary);
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.input-line {
+  flex-grow: 1;
+  outline: none;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-family: "JetBrains Mono", monospace;
+  caret-color: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.block-caret {
+  position: absolute;
+  top: 0;
+  width: 1ch;
+  height: 1.2em;
+  background-color: var(--primary);
+  pointer-events: none;
+  animation: caret-blink 1s steps(1, end) infinite;
+}
+
+@keyframes caret-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.input-measure {
+  position: absolute;
+  visibility: hidden;
+  white-space: pre;
+  font: inherit;
+  letter-spacing: inherit;
+}
+
+.root-prompt {
+  color: #ff5555;
+}
+
+.output {
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.output.welcome {
+  white-space: normal;
+}
+
+.link {
+  color: var(--primary);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.link:hover {
+  opacity: 0.8;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Dark mode by default */
+body.dark {
+  --bg: var(--bg-dark);
+  --text: var(--text-dark);
+  --primary: var(--primary-dark);
+  --secondary: var(--secondary-dark);
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+body.light {
+  --bg: var(--bg-light);
+  --text: var(--text-light);
+  --primary: var(--primary-light);
+  --secondary: var(--secondary-light);
+  background-color: var(--bg);
+  color: var(--text);
+}

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terminal Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="dark min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold" style="color: var(--primary)">
+          terminal-portfolio
+        </h1>
+        <button
+          id="theme-toggle"
+          class="px-3 py-1 rounded text-sm"
+          style="background-color: var(--secondary); color: var(--text)"
+        >
+          Toggle Theme
+        </button>
+      </div>
+
+      <div
+        id="terminal"
+        class="p-4 rounded-lg"
+        style="
+          background-color: var(--bg);
+          border: 1px solid var(--secondary);
+          min-height: 70vh;
+        "
+      >
+        <div class="output welcome">
+          Welcome to my terminal portfolio! Type
+          <span class="link" onclick="insertCommand('help')">help</span> to get
+          started.
+        </div>
+        <div id="history"></div>
+        <div class="command-line">
+          <span id="prompt" class="prompt">guest@portfolio:~$</span>
+          <div class="input-container">
+            <input
+              id="command-input"
+              class="input-line"
+              autofocus
+              autocomplete="off"
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck="false"
+              name="command-input"
+              style="flex-grow: 1"
+            />
+            <div id="block-caret" class="block-caret"></div>
+            <div id="input-measure" class="input-measure"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

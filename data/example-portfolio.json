@@ -1,0 +1,107 @@
+{
+  "about": {
+    "title": "About Me",
+    "content": "I'm a passionate software developer with expertise in web technologies and cloud computing. I love building scalable applications and solving complex problems."
+  },
+  "skills": {
+    "title": "Technical Skills",
+    "categories": [
+      {
+        "name": "Frontend",
+        "skills": ["React", "Vue.js", "TypeScript", "CSS3", "HTML5"]
+      },
+      {
+        "name": "Backend",
+        "skills": ["Node.js", "Python", "Java", "PostgreSQL", "MongoDB"]
+      },
+      {
+        "name": "DevOps",
+        "skills": ["Docker", "Kubernetes", "AWS", "CI/CD", "Terraform"]
+      }
+    ]
+  },
+  "contact": {
+    "title": "Contact Information",
+    "details": {
+      "email": "your.email@example.com",
+      "github": "github.com/yourusername",
+      "linkedin": "linkedin.com/in/yourusername",
+      "twitter": "@yourusername",
+      "website": "yourwebsite.com"
+    }
+  },
+  "projects": [
+    {
+      "id": "project1.txt",
+      "title": "E-commerce Platform",
+      "description": "Built a full-stack e-commerce solution with React and Node.js",
+      "achievements": [
+        "Handled 10,000+ concurrent users",
+        "Implemented secure payment processing",
+        "Reduced page load time by 40%"
+      ]
+    },
+    {
+      "id": "project2.txt",
+      "title": "AI Chatbot",
+      "description": "Developed an intelligent chatbot using machine learning",
+      "achievements": [
+        "Achieved 95% accuracy in intent recognition",
+        "Integrated with multiple messaging platforms",
+        "Processed 1M+ conversations monthly"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "id": "university.txt",
+      "title": "Bachelor of Computer Science",
+      "institution": "University of Technology",
+      "period": "2019-2023",
+      "specialization": "Software Engineering",
+      "gpa": "3.8/4.0"
+    },
+    {
+      "id": "certificates.txt",
+      "title": "Professional Certifications",
+      "certificates": [
+        "AWS Certified Developer Associate",
+        "Google Cloud Professional Developer",
+        "Microsoft Certified: Azure Developer Associate"
+      ]
+    }
+  ],
+  "experience": [
+    {
+      "id": "job1.txt",
+      "title": "Full Stack Developer",
+      "company": "TechCorp Inc.",
+      "period": "2022-2023",
+      "achievements": [
+        "Developed 5+ production applications",
+        "Led a team of 3 junior developers",
+        "Improved system performance by 60%"
+      ]
+    },
+    {
+      "id": "job2.txt",
+      "title": "Software Engineer Intern",
+      "company": "StartupXYZ",
+      "period": "2021-2022",
+      "achievements": [
+        "Built MVP for mobile app",
+        "Collaborated with design team",
+        "Participated in agile development"
+      ]
+    }
+  ],
+  "directories": {
+    "~": ["about", "skills", "projects", "education", "experience", "contact"],
+    "~/about": ["about.txt"],
+    "~/skills": ["skills.txt"],
+    "~/projects": ["project1.txt", "project2.txt"],
+    "~/education": ["university.txt", "certificates.txt"],
+    "~/experience": ["job1.txt", "job2.txt"],
+    "~/contact": ["contact.txt"]
+  }
+}
