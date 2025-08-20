@@ -16,12 +16,24 @@ An interactive terminal-style portfolio website built with HTML, CSS, and JavaSc
 
 ```
 terminal_portfolia/
-├── index.html          # Main HTML file
-├── styles.css          # All CSS styles and themes
-├── script.js           # JavaScript functionality
-├── data/
-│   └── portfolio.json  # Portfolio content data
-└── README.md           # This file
+├── index.html                    # Main HTML file
+├── styles.css                    # All CSS styles and themes
+├── js/                          # JavaScript modules
+│   ├── core/
+│   │   └── terminal.js          # Core terminal functionality
+│   ├── commands/
+│   │   └── commandProcessor.js  # Command handling and processing
+│   ├── features/
+│   │   └── autocomplete.js      # Tab completion functionality
+│   ├── data/
+│   │   └── dataManager.js       # Portfolio data management
+│   ├── ui/
+│   │   └── uiManager.js         # UI elements and block caret
+│   └── app.js                   # Main application coordinator
+├── data/                        # Portfolio data
+│   ├── portfolio.json           # Your current portfolio
+│   └── example-portfolio.json   # Template for customization
+└── README.md                    # This file
 ```
 
 ## 🛠️ Customization
@@ -102,7 +114,7 @@ The easiest way to update your portfolio is by editing the `data/portfolio.json`
 
 ### Adding New Commands
 
-To add new terminal commands, edit the `processCommand` function in `script.js`:
+To add new terminal commands, edit the `processCommand` function in `js/commands/commandProcessor.js`:
 
 ```javascript
 case "newcommand":
@@ -125,12 +137,14 @@ case "newcommand":
 ## 📝 Available Commands
 
 - `help` - Show available commands
+- `welcome` - Display welcome message and available commands
 - `ls` - List files and directories
 - `cd [directory]` - Change directory
 - `cat [file]` - View file contents
 - `clear` - Clear terminal
 - `whoami` - Show current user
 - `pwd` - Print working directory
+- `theme` - Toggle between dark and light themes
 - `sudo su` - Gain root access (for additional commands)
 
 ### Root Commands (after `sudo su`):

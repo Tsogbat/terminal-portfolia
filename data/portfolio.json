@@ -8,25 +8,30 @@
     "categories": [
       {
         "name": "Cybersecurity",
-        "skills": ["Penetration testing", "Security analysis", "Network security"]
+        "skills": ["Penetration testing", "Kali Linux tools"]
       },
       {
         "name": "Data Analysis",
-        "skills": ["Python", "R", "SQL", "Data visualization"]
+        "skills": [
+          "Python",
+          "Tableau",
+          "MSSQL",
+          "Data visualization",
+          "Data cleaning"
+        ]
       },
       {
         "name": "Machine Learning",
-        "skills": ["TensorFlow", "PyTorch", "NLP", "Computer vision"]
+        "skills": ["TensorFlow", "PyTorch", "NLP", "Data preprocessing"]
       }
     ]
   },
   "contact": {
     "title": "Contact Information",
     "details": {
-      "email": "contact@example.com",
-      "github": "github.com/username",
-      "linkedin": "linkedin.com/in/username",
-      "twitter": "@username"
+      "email": "tsogbatb@yahoo.com",
+      "github": "github.com/tsogbat",
+      "linkedin": "linkedin.com/in/tsogbatb"
     }
   },
   "projects": [
@@ -60,29 +65,33 @@
   ],
   "education": [
     {
-      "id": "university.txt",
-      "title": "Computer Science Degree",
-      "institution": "University of Technology",
-      "period": "2018-2022",
-      "specialization": "Cybersecurity and AI",
-      "gpa": "3.9/4.0"
+      "id": "Asia-University.txt",
+      "title": "Bachelor of Science in Data analysis",
+      "institution": "Dept. Computer Science and Information Engineering",
+      "period": "2024-2026",
+      "specialization": "Data analysis, Machine learning",
+      "gpa": "4.0/4.3"
+    },
+    {
+      "id": "UFE.txt",
+      "title": "Bachelor of Science in Information systems",
+      "institution": "Dept. Information systems management",
+      "period": "2022-2024",
+      "specialization": "Information systems",
+      "gpa": "3.44/4.0"
     },
     {
       "id": "certificates.txt",
       "title": "Professional Certifications",
-      "certificates": [
-        "Certified Ethical Hacker (CEH)",
-        "AWS Certified Solutions Architect",
-        "Google Data Analytics Professional"
-      ]
+      "certificates": ["AWS Machine learning foundations"]
     }
   ],
   "experience": [
     {
       "id": "job1.txt",
-      "title": "Security Analyst",
-      "company": "TechSecure Inc.",
-      "period": "2020-2021",
+      "title": "Software developer",
+      "company": "iO Technology",
+      "period": "2024 Jan - 2024 Feb",
       "achievements": [
         "Conducted vulnerability assessments",
         "Implemented security controls",
@@ -91,9 +100,9 @@
     },
     {
       "id": "job2.txt",
-      "title": "Data Scientist",
-      "company": "DataInsights Corp.",
-      "period": "2021-Present",
+      "title": "Cyber security analyst",
+      "company": "Public CSIRT/CC of Mongolia",
+      "period": "2025 Jul-Present",
       "achievements": [
         "Developed ML models for business insights",
         "Automated data pipelines",

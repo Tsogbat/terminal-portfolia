@@ -13,13 +13,6 @@
         <h1 class="text-2xl font-bold" style="color: var(--primary)">
           terminal-portfolio
         </h1>
-        <button
-          id="theme-toggle"
-          class="px-3 py-1 rounded text-sm"
-          style="background-color: var(--secondary); color: var(--text)"
-        >
-          Toggle Theme
-        </button>
       </div>
 
       <div
@@ -31,11 +24,6 @@
           min-height: 70vh;
         "
       >
-        <div class="output welcome">
-          Welcome to my terminal portfolio! Type
-          <span class="link" onclick="insertCommand('help')">help</span> to get
-          started.
-        </div>
         <div id="history"></div>
         <div class="command-line">
           <span id="prompt" class="prompt">guest@portfolio:~$</span>
@@ -58,6 +46,12 @@
       </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Load modules in dependency order -->
+    <script src="js/core/terminal.js"></script>
+    <script src="js/commands/commandProcessor.js"></script>
+    <script src="js/features/autocomplete.js"></script>
+    <script src="js/data/dataManager.js"></script>
+    <script src="js/ui/uiManager.js"></script>
+    <script src="js/app.js"></script>
   </body>
 </html>
