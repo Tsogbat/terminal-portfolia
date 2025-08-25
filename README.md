@@ -2,7 +2,11 @@
 
 An interactive terminal-style portfolio website built with HTML, CSS, and JavaScript.
 
-## 🚀 Features
+## Performance test
+
+- **Lighting fast and stable**: Most resources load from memory or disk cache, ensuring near-instant page loads
+
+## Features
 
 - **Terminal Interface**: `ls`, `cd`, `cat`, history, autocomplete
 - **Absolute paths**: `cat ~/about/about.txt` and (from home only) `cat about/about.txt`
@@ -12,7 +16,7 @@ An interactive terminal-style portfolio website built with HTML, CSS, and JavaSc
 - **Theme**: `theme dark|light|auto` with system preference support
 - **Zoom**: Cmd/Ctrl `+` / `-` / `0` magnifies text (persists)
 
-## 📁 File Structure
+## File Structure
 
 ```
 terminal_portfolia/
@@ -45,27 +49,14 @@ terminal_portfolia/
 └── README.md
 ```
 
-## 🛠️ Customization
+## Customization
 
 - Edit content in `data/*.json`. Top-level navigation comes from `data/directories.json`.
 - Data is validated against `data/schema.json` via Ajv at load.
 - Add PDFs (e.g., `text_resume.pdf`) to the project; they can be downloaded via `wget <path>.pdf` with no code changes.
 - Add Markdown files anywhere and view with `cat <path>.md`.
 
-## 🚀 Getting Started
-
-Because the app `fetch`es JSON/Markdown files, it's best to serve it over HTTP (file:// may block requests):
-
-1. Start a simple static server from the project root:
-   - Python: `python3 -m http.server 8000`
-   - Node: `npx serve .` (or any static server)
-   - VS Code: Live Server extension
-2. Visit `http://localhost:8000` (or the URL your server shows)
-3. Type `help` to see commands
-
-Tip: It will still load fallback demo data if network requests fail, but your own `data/*.json` won't show unless served over HTTP.
-
-## 📝 Available Commands
+## Available Commands
 
 - `help` — Show commands
 - `welcome` — Show welcome
@@ -88,20 +79,4 @@ Tip: It will still load fallback demo data if network requests fail, but your ow
 - Tab: autocomplete commands/args
 - Cmd/Ctrl + / - / 0: zoom text in/out/reset (persists)
 
-## 🔐 Security & Safety
-
-- All HTML output is sanitized (events stripped, safe links enforced)
-- Markdown is rendered in safe mode (escaped, limited tags)
-
-## 🎨 Styling & UX
-
-- Zoom: Cmd/Ctrl `+`, `-`, `0` scales terminal text only (layout stays full width)
-- Theme persists; `auto` follows system preference
-
-## 📱 Browser Compatibility
-
-- Chrome (recommended), Firefox, Safari, Edge
-
 ---
-
-**Happy coding! 🎉**
