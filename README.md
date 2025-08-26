@@ -3,7 +3,6 @@
 An interactive terminal-style portfolio website built with HTML, CSS, and JavaScript.
 
 ## Performance test
-
 - **Lighting fast and stable**: Most resources load from memory or disk cache, ensuring near-instant page loads
 
 ## Features
@@ -55,28 +54,3 @@ terminal_portfolia/
 - Data is validated against `data/schema.json` via Ajv at load.
 - Add PDFs (e.g., `text_resume.pdf`) to the project; they can be downloaded via `wget <path>.pdf` with no code changes.
 - Add Markdown files anywhere and view with `cat <path>.md`.
-
-## Available Commands
-
-- `help` — Show commands
-- `welcome` — Show welcome
-- `ls` — List files/sections
-- `cd [section]` — Change section
-- `pwd` — Print working dir
-- `cat [file|path]` — View `.txt` or `.md`. Examples:
-  - From home: `cat about/about.txt` or `cat ~/about/about.txt`
-  - From other dirs: use `~/about/about.txt`
-- `wget <file|path>` — Download `.pdf` by relative or absolute path, or full URL
-- `theme [dark|light|auto]` — Set/toggle theme
-- `social` — Show social links
-- `open <url|alias>` — Open URL/alias (`github`, `linkedin`, `email`)
-- `history [clear]` — Show/clear command history
-- `sudo su` — Gain root (enables `nano`, `rm`, `touch`)
-
-### Keyboard shortcuts
-
-- Arrow Up/Down: navigate command history
-- Tab: autocomplete commands/args
-- Cmd/Ctrl + / - / 0: zoom text in/out/reset (persists)
-
----
